@@ -1,0 +1,27 @@
+openapi: 3.1.0
+x-stoplight:
+  id: 8de7pfyd0jwdx
+info:
+  title: Factris API
+  version: 0.0.1
+  description: Factris is a game based around HTTP endpoints used to control a factory set in an industrialized high-fantasy world.
+  contact:
+    name: James Clague
+    email: james.clague@brct.io
+    url: 'https://github.com/brct-james/factris-docs'
+  license:
+    url: 'https://choosealicense.com/licenses/agpl-3.0/'
+    name: GNU AGPL3
+servers:
+  - url: 'https://factris.dev'
+    description: Live
+paths: {}
+components:
+  schemas: {}
+  securitySchemes:
+    UserToken:
+      type: http
+      scheme: bearer
+      description: Token received from /register endpoint
+security:
+  - Token: []
