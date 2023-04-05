@@ -3,7 +3,7 @@ x-stoplight:
   id: 8de7pfyd0jwdx
 info:
   title: Factris API
-  version: 0.0.1
+  version: '0.1'
   description: |-
     Factris is a game based around HTTP endpoints used to control a factory set in an industrialized high-fantasy world.
 
