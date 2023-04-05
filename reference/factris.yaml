@@ -4,7 +4,10 @@ x-stoplight:
 info:
   title: Factris API
   version: 0.0.1
-  description: Factris is a game based around HTTP endpoints used to control a factory set in an industrialized high-fantasy world.
+  description: |-
+    Factris is a game based around HTTP endpoints used to control a factory set in an industrialized high-fantasy world.
+
+    Ratelimit is configured with a bucket size of 4 request tokens, and a fill rate of 2/s.
   contact:
     name: James Clague
     email: james.clague@brct.io
@@ -15,7 +18,148 @@ info:
 servers:
   - url: 'https://factris.dev'
     description: Live
-paths: {}
+paths:
+  /register:
+    post:
+      summary: ''
+      operationId: post-register
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                      type:
+                        type: string
+                  message:
+                    type: string
+                  validation:
+                    type: 'null'
+                x-examples:
+                  Example 1:
+                    code: 1 - Success
+                    data:
+                      token: JWT.TOKEN.HERE
+                      type: Bearer
+                    message: 'Successfully registered, save your token, you cannot recover it'
+                    validation: null
+            application/xml:
+              schema:
+                type: object
+                properties: {}
+        '400':
+          $ref: '#/components/responses/400_BAD_REQUEST'
+        '500':
+          $ref: '#/components/responses/500_INTERNAL_SERVER_ERROR'
+      description: Register for a user in the system
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              x-examples:
+                Example 1:
+                  username: EXAMPLEUSERNAME
+              properties:
+                username:
+                  type: string
+              required:
+                - username
+        description: Usernames must be 3-20 characters long and only contain alphanumerics and dashes
+      security: []
+  /my/login:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      username:
+                        type: string
+                  message:
+                    type: string
+                  validation:
+                    type: 'null'
+                x-examples:
+                  Example 1:
+                    code: 1 - Success
+                    data:
+                      username: AMONGUS
+                    message: 'Validated user token, found user in database, logged in successfully'
+                    validation: null
+        '400':
+          $ref: '#/components/responses/400_BAD_REQUEST'
+        '401':
+          $ref: '#/components/responses/401_UNAUTHORIZED'
+        '500':
+          $ref: '#/components/responses/500_INTERNAL_SERVER_ERROR'
+      operationId: get-my-login
+      description: 'Allows you to try logging in with your token, to ensure it is working and that the server is live'
+  '/my/user/{confirmation}':
+    delete:
+      summary: ''
+      operationId: delete-my-user
+      responses:
+        '200':
+          description: OK
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      username:
+                        type: string
+                  message:
+                    type: string
+                  validation:
+                    type: 'null'
+                x-examples:
+                  Example 1:
+                    code: 1 - Success
+                    data:
+                      username: AMONGUS
+                    message: Successfully deleted user
+                    validation: null
+        '400':
+          $ref: '#/components/responses/400_BAD_REQUEST'
+        '401':
+          $ref: '#/components/responses/401_UNAUTHORIZED'
+        '500':
+          $ref: '#/components/responses/500_INTERNAL_SERVER_ERROR'
+      parameters: []
+      description: 'Delete the user associated with the auth token passed, confirmation parameter must match the user''s name in the DB'
+    parameters:
+      - schema:
+          type: string
+        name: confirmation
+        in: path
+        required: true
+        description: The full username in all caps
 components:
   schemas: {}
   securitySchemes:
@@ -23,5 +167,90 @@ components:
       type: http
       scheme: bearer
       description: Token received from /register endpoint
+  responses:
+    400_BAD_REQUEST:
+      description: |-
+        Bad Request
+
+        If the response body or parameters don't pass validation, this response restructure is returned
+
+        The validation object may contain string values or nested objects, which will explain what elements of the request failed validation. This object is intended for developer use while debugging, not necessarily for use in programmatic error handling, as validation contents are not standardized. If still want to try handling errors programmatically, it is recommended to switch on the code field of the response, as each unique error code should have the same validation structure.
+      content:
+        application/json:
+          schema:
+            type: object
+            x-examples:
+              Example 1:
+                code: 2000 - UserAlreadyExists
+                data: null
+                message: ''
+                validation:
+                  body:
+                    username: Username already in use
+            properties:
+              code:
+                type: string
+              data:
+                type: 'null'
+              message:
+                type: string
+              validation:
+                type: object
+    401_UNAUTHORIZED:
+      description: |-
+        Unauthorized
+
+        If the Authorization header does not contain a valid token, with a corresponding entry in the DB, this response restructure is returned
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              data:
+                type: 'null'
+              message:
+                type: string
+              validation:
+                type: object
+                properties:
+                  headers:
+                    type: object
+                    properties:
+                      Authorization:
+                        type: string
+            x-examples:
+              Example 1:
+                code: 1002 - UserDoesNotExist
+                data: null
+                message: ''
+                validation:
+                  headers:
+                    Authorization: Token valid but no user found with username
+    500_INTERNAL_SERVER_ERROR:
+      description: |-
+        Internal Server Error
+
+        If the server encounters an internal error while processing a request, this response restructure is returned
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              data:
+                type: 'null'
+              message:
+                type: string
+              validation:
+                type: 'null'
+            x-examples:
+              Example 1:
+                code: 2000 - UserAlreadyExists
+                data: null
+                message: 'InternalServerError: String'
+                validation: null
 security:
   - Token: []
